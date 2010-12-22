@@ -1,48 +1,48 @@
-{-# LANGUAGE MagicHash, TemplateHaskell, CPP #-}
-module Data.Storable.Endian where
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  Data.Storable.Endian
+-- Copyright   :  (c) Eugene Kirpichov 2010
+-- License     :  New BSD
+--
+-- Maintainer  :  Eugene Kirpichov <ekirpichov@gmail.com>
+-- Stability   :  experimental
+-- Portability :  portable
+--
+-- Storable instances with endianness, in the obvious way: for example, Int64LE 
+-- is peeked and poked in little-endian order.
+--
+
+module Data.Storable.Endian 
+  (
+    Int16LE(..), Int16BE(..),
+    Int32LE(..), Int32BE(..),
+    Int64LE(..), Int64BE(..),
+    Word16LE(..), Word16BE(..),
+    Word32LE(..), Word32BE(..),
+    Word64LE(..), Word64BE(..),
+    FloatLE(..), FloatBE(..),
+    DoubleLE(..), DoubleBE(..)
+  ) 
+  where
+
+import Data.Storable.EndianTemplate
 
 import Foreign.Storable
 import Foreign.Ptr
 import System.IO.Unsafe
+import Unsafe.Coerce
 
 import Data.Word
 import Data.Bits
+import Data.Char
 
 import Language.Haskell.TH
-import Language.Haskell.TH.Syntax
 
 #if defined(__GLASGOW_HASKELL__) && !defined(__HADDOCK__)
 import GHC.Base
 import GHC.Word
 import GHC.Int
 #endif
-
-deriveEndian :: String -> Int -> Int -> Q [Dec]
-deriveEndian baseName bytes bits = mapM deriveEndian' ["le", "be"]
-  where
-    deriveEndian' end = do
-      let typeName = baseName ++ show bits ++ map toUpper end
-      let getter   = reify $ "getWord" ++ show bits ++ end
-      let putter   = reify $ "putWord" ++ show bits ++ end
-
-      [d| 
-               instance Storable $( typeName ) where
-                 sizeOf _ = $(lift bytes)
-                 alignment _ = $(lift bytes)
-                 peek p = ($(typeName) . unsafeCoerce) `fmap` $(getter) (castPtr p)
-                 poke p ($(typeName) x) = $(putter) (unsafeCoerce x) (castPtr p)
-        |]
-
-$(deriveEndian 'Int 2 16)
-$(deriveEndian 'Int 4 32)
-$(deriveEndian 'Int 8 64)
-
-$(deriveEndian 'Word 2 16)
-$(deriveEndian 'Word 4 32)
-$(deriveEndian 'Word 8 64)
-
-$(deriveEndian 'Float 4 32)
-$(deriveEndian 'Double 8 64)
 
 -- The code below has been adapted from the 'binary' library
 -- http://hackage.haskell.org/package/binary
@@ -275,4 +275,15 @@ shiftl_w16 = shiftL
 shiftl_w32 = shiftL
 shiftl_w64 = shiftL
 #endif
+
+$(deriveEndian "Int16" 2 16)
+$(deriveEndian "Int32" 4 32)
+$(deriveEndian "Int64" 8 64)
+
+$(deriveEndian "Word16" 2 16)
+$(deriveEndian "Word32" 4 32)
+$(deriveEndian "Word64" 8 64)
+
+$(deriveEndian "Float" 4 32)
+$(deriveEndian "Double" 8 64)
 
