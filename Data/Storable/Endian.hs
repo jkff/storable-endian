@@ -8,27 +8,18 @@
 -- Stability   :  experimental
 -- Portability :  portable
 --
--- Storable instances with endianness, in the obvious way: for example, Int64LE 
--- is peeked and poked in little-endian order.
+-- Storable instances with endianness.
 --
 
 module Data.Storable.Endian 
   (
-    Int16LE(..), Int16BE(..),
-    Int32LE(..), Int32BE(..),
-    Int64LE(..), Int64BE(..),
-    Word16LE(..), Word16BE(..),
-    Word32LE(..), Word32BE(..),
-    Word64LE(..), Word64BE(..),
-    FloatLE(..), FloatBE(..),
-    DoubleLE(..), DoubleBE(..)
+    LittleEndian(..), BigEndian(..)
   ) 
   where
 
-import Data.Storable.EndianTemplate
-
 import Foreign.Storable
 import Foreign.Ptr
+
 import System.IO.Unsafe
 import Unsafe.Coerce
 
@@ -36,13 +27,104 @@ import Data.Word
 import Data.Bits
 import Data.Char
 
-import Language.Haskell.TH
-
 #if defined(__GLASGOW_HASKELL__) && !defined(__HADDOCK__)
 import GHC.Base
 import GHC.Word
 import GHC.Int
 #endif
+
+newtype LittleEndian a = LE a
+newtype BigEndian    a = BE a
+
+class HasLittleEndian a where
+  peekLE :: Ptr a -> IO a
+  pokeLE :: Ptr a -> a -> IO ()
+
+class HasBigEndian a where
+  peekBE :: Ptr a -> IO a
+  pokeBE :: Ptr a -> a -> IO ()
+
+instance (HasBigEndian a, Storable a) => Storable (BigEndian a) where
+  sizeOf    (BE a)   = sizeOf a
+  alignment (BE a)   = alignment a
+  peek      p        = BE `fmap` peekBE (castPtr p)
+  poke      p (BE a) = pokeBE (castPtr p) a
+
+fork f onX onY = \x y -> f (onX x) (onY y)
+
+------------------------------
+-- Little-endian instances
+------------------------------
+
+instance HasLittleEndian Int16 where
+  peekLE = unsafeCoerce . getWord16le . castPtr
+  pokeLE = fork putWord16le castPtr unsafeCoerce
+
+instance HasLittleEndian Int32 where
+  peekLE = unsafeCoerce . getWord32le . castPtr
+  pokeLE = fork putWord32le castPtr unsafeCoerce
+
+instance HasLittleEndian Int64 where
+  peekLE = unsafeCoerce . getWord64le . castPtr
+  pokeLE = fork putWord64le castPtr unsafeCoerce
+
+instance HasLittleEndian Word16 where
+  peekLE = unsafeCoerce . getWord16le . castPtr
+  pokeLE = fork putWord16le castPtr unsafeCoerce
+
+instance HasLittleEndian Word32 where
+  peekLE = unsafeCoerce . getWord32le . castPtr
+  pokeLE = fork putWord32le castPtr unsafeCoerce
+
+instance HasLittleEndian Word64 where
+  peekLE = unsafeCoerce . getWord64le . castPtr
+  pokeLE = fork putWord64le castPtr unsafeCoerce
+
+instance HasLittleEndian Float where
+  peekLE = unsafeCoerce . getWord32le . castPtr
+  pokeLE = fork putWord32le castPtr unsafeCoerce
+
+instance HasLittleEndian Double where
+  peekLE = unsafeCoerce . getWord64le . castPtr
+  pokeLE = fork putWord64le castPtr unsafeCoerce
+
+
+------------------------------
+-- Big-endian instances
+------------------------------
+
+instance HasBigEndian Int16 where
+  peekBE = unsafeCoerce . getWord16be . castPtr
+  pokeBE = fork putWord16be castPtr unsafeCoerce
+
+instance HasBigEndian Int32 where
+  peekBE = unsafeCoerce . getWord32be . castPtr
+  pokeBE = fork putWord32be castPtr unsafeCoerce
+
+instance HasBigEndian Int64 where
+  peekBE = unsafeCoerce . getWord64be . castPtr
+  pokeBE = fork putWord64be castPtr unsafeCoerce
+
+instance HasBigEndian Word16 where
+  peekBE = unsafeCoerce . getWord16be . castPtr
+  pokeBE = fork putWord16be castPtr unsafeCoerce
+
+instance HasBigEndian Word32 where
+  peekBE = unsafeCoerce . getWord32be . castPtr
+  pokeBE = fork putWord32be castPtr unsafeCoerce
+
+instance HasBigEndian Word64 where
+  peekBE = unsafeCoerce . getWord64be . castPtr
+  pokeBE = fork putWord64be castPtr unsafeCoerce
+
+instance HasBigEndian Float where
+  peekBE = unsafeCoerce . getWord32be . castPtr
+  pokeBE = fork putWord32be castPtr unsafeCoerce
+
+instance HasBigEndian Double where
+  peekBE = unsafeCoerce . getWord64be . castPtr
+  pokeBE = fork putWord64be castPtr unsafeCoerce
+
 
 -- The code below has been adapted from the 'binary' library
 -- http://hackage.haskell.org/package/binary
@@ -55,15 +137,15 @@ import GHC.Int
 --
 
 -- | Write a Word16 in big endian format
-putWord16be :: Word16 -> Ptr Word8 -> IO ()
-putWord16be w p = do
+putWord16be :: Ptr Word8 -> Word16 -> IO ()
+putWord16be p w = do
     poke p               (fromIntegral (shiftr_w16 w 8) :: Word8)
     poke (p `plusPtr` 1) (fromIntegral (w)              :: Word8)
 {-# INLINE putWord16be #-}
 
 -- | Write a Word16 in little endian format
-putWord16le :: Word16 -> Ptr Word8 -> IO ()
-putWord16le w p = do
+putWord16le :: Ptr Word8 -> Word16 -> IO ()
+putWord16le p w = do
     poke p               (fromIntegral (w)              :: Word8)
     poke (p `plusPtr` 1) (fromIntegral (shiftr_w16 w 8) :: Word8)
 {-# INLINE putWord16le #-}
@@ -71,8 +153,8 @@ putWord16le w p = do
 -- putWord16le w16 = writeN 2 (\p -> poke (castPtr p) w16)
 
 -- | Write a Word32 in big endian format
-putWord32be :: Word32 -> Ptr Word8 -> IO ()
-putWord32be w p = do
+putWord32be :: Ptr Word8 -> Word32 -> IO ()
+putWord32be p w = do
     poke p               (fromIntegral (shiftr_w32 w 24) :: Word8)
     poke (p `plusPtr` 1) (fromIntegral (shiftr_w32 w 16) :: Word8)
     poke (p `plusPtr` 2) (fromIntegral (shiftr_w32 w  8) :: Word8)
@@ -80,8 +162,8 @@ putWord32be w p = do
 {-# INLINE putWord32be #-}
 
 -- | Write a Word32 in little endian format
-putWord32le :: Word32 -> Ptr Word8 -> IO ()
-putWord32le w p = do
+putWord32le :: Ptr Word8 -> Word32 -> IO ()
+putWord32le p w = do
     poke p               (fromIntegral (w)               :: Word8)
     poke (p `plusPtr` 1) (fromIntegral (shiftr_w32 w  8) :: Word8)
     poke (p `plusPtr` 2) (fromIntegral (shiftr_w32 w 16) :: Word8)
@@ -92,13 +174,13 @@ putWord32le w p = do
 -- putWord32le w32 = writeN 4 (\p -> poke (castPtr p) w32)
 
 -- | Write a Word64 in big endian format
-putWord64be :: Word64 -> Ptr Word8 -> IO ()
+putWord64be :: Ptr Word8 -> Word64 -> IO ()
 #if WORD_SIZE_IN_BITS < 64
 --
 -- To avoid expensive 64 bit shifts on 32 bit machines, we cast to
 -- Word32, and write that
 --
-putWord64be w p = do
+putWord64be p w = do
     let a = fromIntegral (shiftr_w64 w 32) :: Word32
         b = fromIntegral w                 :: Word32
     poke p               (fromIntegral (shiftr_w32 a 24) :: Word8)
@@ -110,7 +192,7 @@ putWord64be w p = do
     poke (p `plusPtr` 6) (fromIntegral (shiftr_w32 b  8) :: Word8)
     poke (p `plusPtr` 7) (fromIntegral (b)               :: Word8)
 #else
-putWord64be w p = do
+putWord64be p w = do
     poke p               (fromIntegral (shiftr_w64 w 56) :: Word8)
     poke (p `plusPtr` 1) (fromIntegral (shiftr_w64 w 48) :: Word8)
     poke (p `plusPtr` 2) (fromIntegral (shiftr_w64 w 40) :: Word8)
@@ -123,10 +205,10 @@ putWord64be w p = do
 {-# INLINE putWord64be #-}
 
 -- | Write a Word64 in little endian format
-putWord64le :: Word64 -> Ptr Word8 -> IO ()
+putWord64le :: Ptr Word8 -> Word64 -> IO ()
 
 #if WORD_SIZE_IN_BITS < 64
-putWord64le w p = do
+putWord64le p w = do
     let b = fromIntegral (shiftr_w64 w 32) :: Word32
         a = fromIntegral w                 :: Word32
     poke (p)             (fromIntegral (a)               :: Word8)
@@ -138,7 +220,7 @@ putWord64le w p = do
     poke (p `plusPtr` 6) (fromIntegral (shiftr_w32 b 16) :: Word8)
     poke (p `plusPtr` 7) (fromIntegral (shiftr_w32 b 24) :: Word8)
 #else
-putWord64le w p = do
+putWord64le p w = do
     poke p               (fromIntegral (w)               :: Word8)
     poke (p `plusPtr` 1) (fromIntegral (shiftr_w64 w  8) :: Word8)
     poke (p `plusPtr` 2) (fromIntegral (shiftr_w64 w 16) :: Word8)
@@ -275,15 +357,4 @@ shiftl_w16 = shiftL
 shiftl_w32 = shiftL
 shiftl_w64 = shiftL
 #endif
-
-$(deriveEndian "Int16" 2 16)
-$(deriveEndian "Int32" 4 32)
-$(deriveEndian "Int64" 8 64)
-
-$(deriveEndian "Word16" 2 16)
-$(deriveEndian "Word32" 4 32)
-$(deriveEndian "Word64" 8 64)
-
-$(deriveEndian "Float" 4 32)
-$(deriveEndian "Double" 8 64)
 
