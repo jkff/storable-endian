@@ -44,6 +44,12 @@ class HasBigEndian a where
   peekBE :: Ptr a -> IO a
   pokeBE :: Ptr a -> a -> IO ()
 
+instance (HasLittleEndian a, Storable a) => Storable (LittleEndian a) where
+  sizeOf    (LE a)   = sizeOf a
+  alignment (LE a)   = alignment a
+  peek      p        = LE `fmap` peekLE (castPtr p)
+  poke      p (LE a) = pokeLE (castPtr p) a
+
 instance (HasBigEndian a, Storable a) => Storable (BigEndian a) where
   sizeOf    (BE a)   = sizeOf a
   alignment (BE a)   = alignment a
