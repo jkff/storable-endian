@@ -1,5 +1,5 @@
 Name: storable-endian
-Version: 0.2.1
+Version: 0.2.2
 License: BSD3
 License-file: LICENSE
 Copyright: Eugene Kirpichov, 2010
@@ -25,4 +25,6 @@ library
 
   Build-Depends: haskell98, template-haskell
   Exposed-Modules: Data.Storable.Endian
-  Extensions: MagicHash, CPP
+  Extensions: 
+    MagicHash
+   ,CPP

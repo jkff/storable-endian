@@ -13,19 +13,18 @@
 
 module Data.Storable.Endian 
   (
-    LittleEndian(..), BigEndian(..)
+    LittleEndian(..), BigEndian(..),
+    HasLittleEndian(..), HasBigEndian(..)
   ) 
   where
 
 import Foreign.Storable
 import Foreign.Ptr
 
-import System.IO.Unsafe
 import Unsafe.Coerce
 
 import Data.Word
 import Data.Bits
-import Data.Char
 
 #if defined(__GLASGOW_HASKELL__) && !defined(__HADDOCK__)
 import GHC.Base
@@ -238,67 +237,92 @@ putWord64le p w = do
 #endif
 {-# INLINE putWord64le #-}
 
-unsafePeekOff :: Ptr Word8 -> Int -> Word8
-unsafePeekOff p off = unsafePerformIO (p `peekElemOff` off)
-
 -- on a little endian machine:
 -- putWord64le w64 = writeN 8 (\p -> poke (castPtr p) w64)
 -- | Read a Word16 in big endian format
 getWord16be :: Ptr Word8 -> IO Word16
 getWord16be p = do
-    return $! (fromIntegral (p `unsafePeekOff` 0) `shiftl_w16` 8) .|.
-              (fromIntegral (p `unsafePeekOff` 1))
+    b0 <- fromIntegral `fmap` (p `peekElemOff` 0)
+    b1 <- fromIntegral `fmap` (p `peekElemOff` 1)
+    return $! (b0 `shiftl_w16` 8) .|.
+              (b1 )
 {-# INLINE getWord16be #-}
 
 -- | Read a Word16 in little endian format
 getWord16le :: Ptr Word8 -> IO Word16
 getWord16le p = do
-    return $! (fromIntegral (p `unsafePeekOff` 1) `shiftl_w16` 8) .|.
-              (fromIntegral (p `unsafePeekOff` 0) )
+    b0 <- fromIntegral `fmap` (p `peekElemOff` 0)
+    b1 <- fromIntegral `fmap` (p `peekElemOff` 1)
+    return $! (b1 `shiftl_w16` 8) .|.
+              (b0 )
 {-# INLINE getWord16le #-}
 
 -- | Read a Word32 in big endian format
 getWord32be :: Ptr Word8 -> IO Word32
 getWord32be p = do
-    return $! (fromIntegral (p `unsafePeekOff` 0) `shiftl_w32` 24) .|.
-              (fromIntegral (p `unsafePeekOff` 1) `shiftl_w32` 16) .|.
-              (fromIntegral (p `unsafePeekOff` 2) `shiftl_w32`  8) .|.
-              (fromIntegral (p `unsafePeekOff` 3) )
+    b0 <- fromIntegral `fmap` (p `peekElemOff` 0)
+    b1 <- fromIntegral `fmap` (p `peekElemOff` 1)
+    b2 <- fromIntegral `fmap` (p `peekElemOff` 2)
+    b3 <- fromIntegral `fmap` (p `peekElemOff` 3)
+    return $! (b0 `shiftl_w32` 24) .|.
+              (b1 `shiftl_w32` 16) .|.
+              (b2 `shiftl_w32`  8) .|.
+              (b3 )
 {-# INLINE getWord32be #-}
 
 -- | Read a Word32 in little endian format
 getWord32le :: Ptr Word8 -> IO Word32
 getWord32le p = do
-    return $! (fromIntegral (p `unsafePeekOff` 3) `shiftl_w32` 24) .|.
-              (fromIntegral (p `unsafePeekOff` 2) `shiftl_w32` 16) .|.
-              (fromIntegral (p `unsafePeekOff` 1) `shiftl_w32`  8) .|.
-              (fromIntegral (p `unsafePeekOff` 0) )
+    b0 <- fromIntegral `fmap` (p `peekElemOff` 0)
+    b1 <- fromIntegral `fmap` (p `peekElemOff` 1)
+    b2 <- fromIntegral `fmap` (p `peekElemOff` 2)
+    b3 <- fromIntegral `fmap` (p `peekElemOff` 3)
+    return $! (b3 `shiftl_w32` 24) .|.
+              (b2 `shiftl_w32` 16) .|.
+              (b1 `shiftl_w32`  8) .|.
+              (b0 )
 {-# INLINE getWord32le #-}
 
 -- | Read a Word64 in big endian format
 getWord64be :: Ptr Word8 -> IO Word64
 getWord64be p = do
-    return $! (fromIntegral (p `unsafePeekOff` 0) `shiftl_w64` 56) .|.
-              (fromIntegral (p `unsafePeekOff` 1) `shiftl_w64` 48) .|.
-              (fromIntegral (p `unsafePeekOff` 2) `shiftl_w64` 40) .|.
-              (fromIntegral (p `unsafePeekOff` 3) `shiftl_w64` 32) .|.
-              (fromIntegral (p `unsafePeekOff` 4) `shiftl_w64` 24) .|.
-              (fromIntegral (p `unsafePeekOff` 5) `shiftl_w64` 16) .|.
-              (fromIntegral (p `unsafePeekOff` 6) `shiftl_w64`  8) .|.
-              (fromIntegral (p `unsafePeekOff` 7) )
+    b0 <- fromIntegral `fmap` (p `peekElemOff` 0)
+    b1 <- fromIntegral `fmap` (p `peekElemOff` 1)
+    b2 <- fromIntegral `fmap` (p `peekElemOff` 2)
+    b3 <- fromIntegral `fmap` (p `peekElemOff` 3)
+    b4 <- fromIntegral `fmap` (p `peekElemOff` 4)
+    b5 <- fromIntegral `fmap` (p `peekElemOff` 5)
+    b6 <- fromIntegral `fmap` (p `peekElemOff` 6)
+    b7 <- fromIntegral `fmap` (p `peekElemOff` 7)
+    return $! (b0 `shiftl_w64` 56) .|.
+              (b1 `shiftl_w64` 48) .|.
+              (b2 `shiftl_w64` 40) .|.
+              (b3 `shiftl_w64` 32) .|.
+              (b4 `shiftl_w64` 24) .|.
+              (b5 `shiftl_w64` 16) .|.
+              (b6 `shiftl_w64`  8) .|.
+              (b7 )
 {-# INLINE getWord64be #-}
 
 -- | Read a Word64 in little endian format
 getWord64le :: Ptr Word8 -> IO Word64
 getWord64le p = do
-    return $! (fromIntegral (p `unsafePeekOff` 7) `shiftl_w64` 56) .|.
-              (fromIntegral (p `unsafePeekOff` 6) `shiftl_w64` 48) .|.
-              (fromIntegral (p `unsafePeekOff` 5) `shiftl_w64` 40) .|.
-              (fromIntegral (p `unsafePeekOff` 4) `shiftl_w64` 32) .|.
-              (fromIntegral (p `unsafePeekOff` 3) `shiftl_w64` 24) .|.
-              (fromIntegral (p `unsafePeekOff` 2) `shiftl_w64` 16) .|.
-              (fromIntegral (p `unsafePeekOff` 1) `shiftl_w64`  8) .|.
-              (fromIntegral (p `unsafePeekOff` 0) )
+    b0 <- fromIntegral `fmap` (p `peekElemOff` 0)
+    b1 <- fromIntegral `fmap` (p `peekElemOff` 1)
+    b2 <- fromIntegral `fmap` (p `peekElemOff` 2)
+    b3 <- fromIntegral `fmap` (p `peekElemOff` 3)
+    b4 <- fromIntegral `fmap` (p `peekElemOff` 4)
+    b5 <- fromIntegral `fmap` (p `peekElemOff` 5)
+    b6 <- fromIntegral `fmap` (p `peekElemOff` 6)
+    b7 <- fromIntegral `fmap` (p `peekElemOff` 7)
+    return $! (b7 `shiftl_w64` 56) .|.
+              (b6 `shiftl_w64` 48) .|.
+              (b5 `shiftl_w64` 40) .|.
+              (b4 `shiftl_w64` 32) .|.
+              (b3 `shiftl_w64` 24) .|.
+              (b2 `shiftl_w64` 16) .|.
+              (b1 `shiftl_w64`  8) .|.
+              (b0 )
 {-# INLINE getWord64le #-}
 
 ------------------------------------------------------------------------
@@ -363,4 +387,5 @@ shiftl_w16 = shiftL
 shiftl_w32 = shiftL
 shiftl_w64 = shiftL
 #endif
+
 
