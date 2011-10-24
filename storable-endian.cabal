@@ -23,7 +23,7 @@ library
   else
     Build-Depends: base < 3
 
-  Build-Depends: haskell98, template-haskell, byteorder
+  Build-Depends: byteorder
   Exposed-Modules: Data.Storable.Endian
   Extensions: 
     MagicHash
