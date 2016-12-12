@@ -38,12 +38,12 @@ import GHC.Word
 
 import GHC.Generics (Generic(..))
 
-newtype LittleEndian a = LE a
+newtype LittleEndian a = LE { getLittleEndian :: a }
   deriving ( Eq, Ord, Show, Read, Enum
            , Num, Integral, Fractional, Floating, Real, RealFrac, RealFloat
            , Generic)
 
-newtype BigEndian    a = BE a
+newtype BigEndian    a = BE { getBigEndian    :: a }
   deriving ( Eq, Ord, Show, Read, Enum
            , Num, Integral, Fractional, Floating, Real, RealFrac, RealFloat
            , Generic)
