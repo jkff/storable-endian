@@ -14,6 +14,7 @@
 module Data.Storable.Endian 
   (
     LittleEndian(..), BigEndian(..),
+    getLittleEndian, getBigEndian,
     HasLittleEndian(..), HasBigEndian(..)
   ) 
   where
@@ -36,6 +37,12 @@ import GHC.Int
 
 newtype LittleEndian a = LE a
 newtype BigEndian    a = BE a
+
+getLittleEndian :: LittleEndian a -> a
+getLittleEndian (LE a) = a
+
+getBigEndian :: BigEndian a -> a
+getBigEndian (BE a) = a
 
 class HasLittleEndian a where
   peekLE :: Ptr a -> IO a
