@@ -34,8 +34,8 @@ import GHC.Word
 import GHC.Int
 #endif
 
-newtype LittleEndian a = LE a
-newtype BigEndian    a = BE a
+newtype LittleEndian a = LE { getLittleEndian :: a }
+newtype BigEndian    a = BE { getBigEndian    :: a }
 
 class HasLittleEndian a where
   peekLE :: Ptr a -> IO a
