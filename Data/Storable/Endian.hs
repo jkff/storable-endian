@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveGeneric, GeneralizedNewtypeDeriving #-}
+
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Data.Storable.Endian
@@ -11,31 +13,40 @@
 -- Storable instances with endianness.
 --
 
-module Data.Storable.Endian 
+module Data.Storable.Endian
   (
     LittleEndian(..), BigEndian(..),
     HasLittleEndian(..), HasBigEndian(..)
-  ) 
+  )
   where
 
 import System.ByteOrder
 
-import Foreign.Storable
 import Foreign.Ptr
+import Foreign.Storable
 
 import Unsafe.Coerce
 
-import Data.Word
 import Data.Bits
+import Data.Word
 
 #if defined(__GLASGOW_HASKELL__) && !defined(__HADDOCK__)
 import GHC.Base
-import GHC.Word
 import GHC.Int
+import GHC.Word
 #endif
 
+import GHC.Generics (Generic(..))
+
 newtype LittleEndian a = LE a
+  deriving ( Eq, Ord, Show, Read, Enum
+           , Num, Integral, Fractional, Floating, Real, RealFrac, RealFloat
+           , Generic)
+
 newtype BigEndian    a = BE a
+  deriving ( Eq, Ord, Show, Read, Enum
+           , Num, Integral, Fractional, Floating, Real, RealFrac, RealFloat
+           , Generic)
 
 class HasLittleEndian a where
   peekLE :: Ptr a -> IO a
@@ -145,8 +156,8 @@ instance HasBigEndian Double where
 
 -- | Write a Word16 in big endian format
 putWord16be :: Ptr Word8 -> Word16 -> IO ()
-putWord16be = if byteOrder == BigEndian 
-              then \p w -> poke (castPtr p) w 
+putWord16be = if byteOrder == BigEndian
+              then \p w -> poke (castPtr p) w
               else \p w -> do
     poke p               (fromIntegral (shiftr_w16 w 8) :: Word8)
     poke (p `plusPtr` 1) (fromIntegral (w)              :: Word8)
@@ -407,5 +418,3 @@ shiftl_w16 = shiftL
 shiftl_w32 = shiftL
 shiftl_w64 = shiftL
 #endif
-
-
