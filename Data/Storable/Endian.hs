@@ -63,6 +63,7 @@ instance (HasBigEndian a, Storable a) => Storable (BigEndian a) where
   peek      p        = BE `fmap` peekBE (castPtr p)
   poke      p (BE a) = pokeBE (castPtr p) a
 
+fork :: (a1 -> b1 -> c) -> (a0 -> a1) -> (b0 -> b1) -> a0 -> b0 -> c
 fork f onX onY = \x y -> f (onX x) (onY y)
 
 ------------------------------
