@@ -1,5 +1,5 @@
 Name: storable-endian
-Version: 0.2.6
+Version: 0.2.6.1
 License: BSD3
 License-file: LICENSE
 Copyright: Eugene Kirpichov, 2010
@@ -8,7 +8,7 @@ Maintainer: Eugene Kirpichov <ekirpichov@gmail.com>
 Synopsis: Storable instances with endianness
 Description: Storable instances with endianness
 Category: Data
-Cabal-Version: >= 1.6
+Cabal-Version: 1.14
 Build-Type: Simple
 Source-repository head
   type: git
@@ -25,6 +25,6 @@ library
 
   Build-Depends: byteorder
   Exposed-Modules: Data.Storable.Endian
-  Extensions: 
-    MagicHash
-   ,CPP
+  Default-Language: Haskell98
+  Default-Extensions: CPP
+  GHC-Options: -Wall

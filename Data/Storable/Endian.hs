@@ -29,12 +29,7 @@ import Unsafe.Coerce
 
 import Data.Bits
 import Data.Word
-
-#if defined(__GLASGOW_HASKELL__) && !defined(__HADDOCK__)
-import GHC.Base
-import GHC.Int
-import GHC.Word
-#endif
+import Data.Int
 
 import GHC.Generics (Generic(..))
 
@@ -68,6 +63,7 @@ instance (HasBigEndian a, Storable a) => Storable (BigEndian a) where
   peek      p        = BE `fmap` peekBE (castPtr p)
   poke      p (BE a) = pokeBE (castPtr p) a
 
+fork :: (a1 -> b1 -> c) -> (a0 -> a1) -> (b0 -> b1) -> a0 -> b0 -> c
 fork f onX onY = \x y -> f (onX x) (onY y)
 
 ------------------------------
@@ -366,28 +362,9 @@ shiftr_w32 :: Word32 -> Int -> Word32
 {-# INLINE shiftr_w64 #-}
 shiftr_w64 :: Word64 -> Int -> Word64
 
-#if defined(__GLASGOW_HASKELL__) && !defined(__HADDOCK__)
-shiftr_w16 (W16# w) (I# i) = W16# (w `uncheckedShiftRL#`   i)
-shiftr_w32 (W32# w) (I# i) = W32# (w `uncheckedShiftRL#`   i)
-
-#if WORD_SIZE_IN_BITS < 64
-shiftr_w64 (W64# w) (I# i) = W64# (w `uncheckedShiftRL64#` i)
-
-#if __GLASGOW_HASKELL__ <= 606
--- Exported by GHC.Word in GHC 6.8 and higher
-foreign import ccall unsafe "stg_uncheckedShiftRL64"
-    uncheckedShiftRL64#     :: Word64# -> Int# -> Word64#
-#endif
-
-#else
-shiftr_w64 (W64# w) (I# i) = W64# (w `uncheckedShiftRL#` i)
-#endif
-
-#else
 shiftr_w16 = shiftR
 shiftr_w32 = shiftR
 shiftr_w64 = shiftR
-#endif
 
 ------------------------------------------------------------------------
 -- Unchecked shifts
@@ -396,25 +373,6 @@ shiftl_w16 :: Word16 -> Int -> Word16
 shiftl_w32 :: Word32 -> Int -> Word32
 shiftl_w64 :: Word64 -> Int -> Word64
 
-#if defined(__GLASGOW_HASKELL__) && !defined(__HADDOCK__)
-shiftl_w16 (W16# w) (I# i) = W16# (w `uncheckedShiftL#`   i)
-shiftl_w32 (W32# w) (I# i) = W32# (w `uncheckedShiftL#`   i)
-
-#if WORD_SIZE_IN_BITS < 64
-shiftl_w64 (W64# w) (I# i) = W64# (w `uncheckedShiftL64#` i)
-
-#if __GLASGOW_HASKELL__ <= 606
--- Exported by GHC.Word in GHC 6.8 and higher
-foreign import ccall unsafe "stg_uncheckedShiftL64"
-    uncheckedShiftL64#     :: Word64# -> Int# -> Word64#
-#endif
-
-#else
-shiftl_w64 (W64# w) (I# i) = W64# (w `uncheckedShiftL#` i)
-#endif
-
-#else
 shiftl_w16 = shiftL
 shiftl_w32 = shiftL
 shiftl_w64 = shiftL
-#endif
